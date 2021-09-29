@@ -1,0 +1,27 @@
+a)
+
+Lexeme := Number | Operator | Command;
+Number := [ "-" ] Digit { Digit } [ "." ] { Digit};
+Digit := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+Operator := "+" | "-" | "*" | "/";
+Command := "p" | "d" | "^" | "i";
+
+b)
+
+Expression := Number
+            | "(" Expression " " Operator " " Expression ")"
+            | "-" Expression
+            | "1/" Expression;
+Number := Digit { Digit } [ "." ] { Digit};
+Digit := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+Operator := "+" | "-" | "*" | "/";
+
+Since each expression is surrounded by parenthesis, the grammar is unambiguous. The string "((1 + 2) + 3)" can only be created from one parse tree. Without the parenthesis we could have created the string "1 + 2 + 3" from two different parse trees.
+
+c)
+
+A grammar is context-free if it only contains production rules that can be applied regardless of the context of the nonterminals. Otherwise, the grammar is said to be context-sensitive.
+
+d)
+
+Oz is a strongly typed language, and has no implicit conversion between integers and floating point numbers. Therefore, an error is raised if you try to use an operation between a float and integer. This is useful because it helps to enforce correct numerical logic in the program (e.g. a counter should be an integer).
