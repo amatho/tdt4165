@@ -22,10 +22,20 @@ object Main extends App {
       fibonacci(n - 1) + fibonacci(n - 2)
   }
 
-  def threaded(f: () => Unit) = {
-    new Thread(new Runnable {
-      def run = f()
-    })
+  def waitingThread(f: () => Unit) = {
+    new Thread {
+      override def run = {
+        f()
+      }
+    }
+  }
+
+  def thread(f: => Unit) = {
+    val t = new Thread {
+      override def run = f
+    }
+    t.start
+    t
   }
 
   val arr = new Array[Int](51)
@@ -40,6 +50,31 @@ object Main extends App {
   println(s"fibonacci(12) = $fib")
 
   val func = () => println("A function")
-  val thread = threaded(func)
-  println(thread)
+  val funcThread = waitingThread(func)
+  println(funcThread)
+
+  private var counter: Int = 0
+  def increaseCounter(): Unit = this.synchronized {
+    counter += 1
+  }
+
+  def printCounter(): Unit = this.synchronized {
+    println(counter)
+  }
+
+  val inc1 = thread { increaseCounter() }
+  val inc2 = thread { increaseCounter() }
+  val printer = thread { printCounter() }
+
+  printer.join
+  inc1.join
+  inc2.join
+
+  object Deadlock {
+    lazy val foo = 42
+    lazy val bar = (1 to 1).par.map(i => Deadlock.foo + i)
+  }
+
+  // Uncomment the line below to cause a deadlock
+  // Deadlock.bar
 }
