@@ -59,12 +59,6 @@ class Bank(val allowedAttempts: Integer = 3) {
       processTransactions
     }
   }
-                                              // TOO
-                                              // project task 2
-                                              // Function that pops a transaction from the queue
-                                              // and spawns a thread to execute the transaction.
-                                              // Finally do the appropriate thing, depending on whether
-                                              // the transaction succeeded or not
 
   def addAccount(initialBalance: Double): Account = {
     new Account(this, initialBalance)
