@@ -1,5 +1,7 @@
 import exceptions._
 import scala.collection.mutable
+import scala.collection.JavaConverters._
+import java.util.concurrent.ConcurrentLinkedQueue
 
 object TransactionStatus extends Enumeration {
   val SUCCESS, PENDING, FAILED = Value
@@ -7,24 +9,22 @@ object TransactionStatus extends Enumeration {
 
 class TransactionQueue {
 
-    // TODO
-    // project task 1.1
-    // Add datastructure to contain the transactions
+  private val queue = new ConcurrentLinkedQueue[Transaction]
 
-    // Remove and return the first element from the queue
-    def pop: Transaction = ???
+  // Remove and return the first element from the queue
+  def pop: Transaction = queue.poll
 
-    // Return whether the queue is empty
-    def isEmpty: Boolean = ???
+  // Return whether the queue is empty
+  def isEmpty: Boolean = queue.isEmpty
 
-    // Add new element to the back of the queue
-    def push(t: Transaction): Unit = ???
+  // Add new element to the back of the queue
+  def push(t: Transaction): Unit = queue.add(t)
 
-    // Return the first element from the queue without removing it
-    def peek: Transaction = ???
+  // Return the first element from the queue without removing it
+  def peek: Transaction = queue.peek
 
-    // Return an iterator to allow you to iterate over the queue
-    def iterator: Iterator[Transaction] = ???
+  // Return an iterator to allow you to iterate over the queue
+  def iterator: Iterator[Transaction] = queue.iterator.asScala
 }
 
 class Transaction(val transactionsQueue: TransactionQueue,
@@ -32,28 +32,38 @@ class Transaction(val transactionsQueue: TransactionQueue,
                   val from: Account,
                   val to: Account,
                   val amount: Double,
-                  val allowedAttemps: Int) extends Runnable {
+                  val allowedAttempts: Int) extends Runnable {
 
   var status: TransactionStatus.Value = TransactionStatus.PENDING
   var attempt = 0
 
   override def run: Unit = {
+    def doTransaction() = {
+      attempt += 1
 
-      def doTransaction() = {
-          // TODO - project task 3
-          // Extend this method to satisfy requirements.
-          from withdraw amount
-          to deposit amount
+      // Fail if the transaction has used too many attempts.
+      // Set status to pending if either withdrawal or deposit fails.
+      // Set status to sucess if both withdrawal and deposit succeeds
+      if (attempt > allowedAttempts) {
+        status = TransactionStatus.FAILED
+      } else {
+        from.withdraw(amount) match {
+          case Left(()) => to.deposit(amount) match {
+            case Left(()) => status = TransactionStatus.SUCCESS
+            case Right(_) => status = TransactionStatus.PENDING
+          }
+          case Right(_) => status = TransactionStatus.PENDING
+        }
       }
-
-      // TODO - project task 3
-      // make the code below thread safe
-      if (status == TransactionStatus.PENDING) {
-          doTransaction
-          Thread.sleep(50) // you might want this to make more room for
-                           // new transactions to be added to the queue
-      }
-
-
     }
+
+    // Ensure that no other threads executes this transaction at the same time
+    this.synchronized {
+      if (status == TransactionStatus.PENDING) {
+        doTransaction
+
+        Thread.sleep(50)
+      }
+    }
+  }
 }
